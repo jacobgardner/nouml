@@ -1,0 +1,25 @@
+{
+  "name": "nosqluml",
+  "version": "1.0.0",
+  "description": "",
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "source": "src/index.html",
+  "scripts": {
+    "build": "parcel build src/index.html",
+    "watch": "parcel src/index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/d3": "7.1.0",
+    "@types/parcel-env": "0.0.1",
+    "parcel": "2.0.1",
+    "typescript": "4.5.3",
+    "wnd-hygiene": "1.0.1"
+  },
+  "dependencies": {
+    "d3": "7.2.1"
+  },
+  "prettier": "wnd-hygiene/prettier.json"
+}
