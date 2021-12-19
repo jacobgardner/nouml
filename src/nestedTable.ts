@@ -1,6 +1,7 @@
-import { NODE_SIZE } from './config';
+import { ICON_SIZE, NODE_SIZE } from './config';
 import uniqid from 'uniqid';
 import { wrap } from './utils';
+import copy from './icons/copy-to-clipboard.svg';
 
 export interface ColumnDetails<D> {
   name: string;
@@ -149,6 +150,10 @@ export function createNestedTable<E extends SVGElement, D>(
         return d.id;
       });
 
+    // primaryGroup.selectChildren('')
+
+    const xOffset = (d) => (d.depth - 1) * NODE_SIZE;
+
     const primaryEnter = primaryNode
       .enter()
       .append('g')
@@ -157,9 +162,7 @@ export function createNestedTable<E extends SVGElement, D>(
       .attr(
         'transform',
         (d) =>
-          `translate(${primaryOffset + (d.depth - 1) * NODE_SIZE}, ${
-            startingPoint.data.index * NODE_SIZE + NODE_SIZE / 2
-          })`
+          `translate(${primaryOffset}, ${startingPoint.data.index * NODE_SIZE})`
       )
       .on('click', (event, d) => {
         if (d.children || d._children) {
@@ -168,34 +171,44 @@ export function createNestedTable<E extends SVGElement, D>(
         }
       });
 
+    primaryEnter
+      .append('image')
+      .attr('class', 'copy-to-clipboard')
+      .attr('xlink:href', copy)
+      .attr('height', ICON_SIZE)
+      .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
+      .attr('x', primaryWidth - NODE_SIZE)
+      .attr('cursor', 'pointer')
+      .on('click', (evt, d) => {
+        navigator.clipboard.writeText(d.data.name);
+      });
+
     primaryNode
       .merge(primaryEnter)
       .transition(transition)
       .attr('fill-opacity', 1)
       .attr(
         'transform',
-        (d) =>
-          `translate(${primaryOffset + (d.depth - 1) * NODE_SIZE}, ${
-            d.data.index * NODE_SIZE + NODE_SIZE / 2
-          })`
+        (d) => `translate(${primaryOffset}, ${d.data.index * NODE_SIZE})`
       );
 
     const textAndCaret = primaryEnter
       .append('g')
       .attr('dominant-baseline', 'middle')
+      .attr('transform', (d) => `translate(${xOffset(d)}, ${NODE_SIZE / 2})`)
       .attr('cursor', (d) =>
         d.children || d._children ? 'pointer' : 'default'
       );
-
-    console.log(primaryWidth);
 
     textAndCaret
       .append('text')
       .text((d) => d.data.name)
       .attr('x', NODE_SIZE)
       .each(function (d) {
-        wrap(primaryWidth - (d.depth -1) * NODE_SIZE).call(this);
-      });
+        wrap(primaryWidth - (d.depth - 1) * NODE_SIZE - NODE_SIZE).call(this);
+      })
+      .append('title')
+      .text((d) => d.data.name);
 
     const caret = textAndCaret
       .append('text')
@@ -226,9 +239,7 @@ export function createNestedTable<E extends SVGElement, D>(
       .attr(
         'transform',
         (d) =>
-          `translate(${primaryOffset + (d.depth - 1) * NODE_SIZE}, ${
-            startingPoint.data.index * NODE_SIZE + NODE_SIZE / 2
-          })`
+          `translate(${primaryOffset}, ${startingPoint.data.index * NODE_SIZE})`
       );
 
     let columnIndex = 0;
@@ -256,7 +267,7 @@ export function createNestedTable<E extends SVGElement, D>(
             'transform',
             (d) =>
               `translate(${currentColumnOffset}, ${
-                startingPoint.data.index * NODE_SIZE 
+                startingPoint.data.index * NODE_SIZE
               })`
           );
 
@@ -267,9 +278,7 @@ export function createNestedTable<E extends SVGElement, D>(
           .attr(
             'transform',
             (d) =>
-              `translate(${currentColumnOffset}, ${
-                d.data.index * NODE_SIZE 
-              })`
+              `translate(${currentColumnOffset}, ${d.data.index * NODE_SIZE})`
           );
 
         column.content(currentColumnEnter, column.width);
@@ -283,7 +292,7 @@ export function createNestedTable<E extends SVGElement, D>(
             'transform',
             (d) =>
               `translate(${currentColumnOffset}, ${
-                startingPoint.data.index * NODE_SIZE 
+                startingPoint.data.index * NODE_SIZE
               })`
           );
       }

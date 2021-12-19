@@ -1,12 +1,10 @@
 import * as d3 from 'd3';
 import { accountModel, CollectionSchema, isSubdoc } from './accountData';
-import { NODE_SIZE } from './config';
+import { NODE_SIZE, ICON_SIZE } from './config';
 import { createNestedTable } from './nestedTable';
 import { wrap } from './utils';
 import noteIcon from './icons/note.svg';
 import copy from './icons/copy-to-clipboard.svg';
-
-const ICON_SIZE = 14;
 
 if (module.hot) {
   module.hot.dispose(function (data) {
@@ -87,7 +85,9 @@ createNestedTable(svg, {
           .attr('y', NODE_SIZE / 2)
           .text((d) => (isSubdoc(d) ? '- ' : d.data.type))
           .attr('dominant-baseline', 'middle')
-          .each(wrap(width - NODE_SIZE / 2 - ICON_SIZE));
+          .each(wrap(width - NODE_SIZE / 2 - ICON_SIZE))
+          .append('title')
+          .text((d) => (isSubdoc(d) ? '- ' : d.data.type));
         root
           .append('image')
           .attr('class', 'copy-to-clipboard')
