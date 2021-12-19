@@ -19,7 +19,7 @@ interface Index {
 
 interface CollectionSchemaBase {
   name: string;
-  notes?: string[];
+  notes?: string;
   optional?: boolean;
   indexes?: Index[];
 }
@@ -46,9 +46,9 @@ export function isSubdoc(model: CollectionSchema): model is SubdocFieldItem {
 
 export const accountModel: CollectionSchema = {
   name: 'Fields',
-  notes: ['This is the collection for accounts'],
+  notes: 'This is the collection for accounts',
   children: [
-    { name: '_id', type: 'ObjectId', notes: ['Auto-generated'] },
+    { name: '_id', type: 'ObjectId', notes: 'Auto-generated' },
     { name: 'changeId', type: 'string' },
     { name: 'masterAccountId', type: 'string' },
     { name: 'unifiedAccountId', type: 'string' },
@@ -68,9 +68,10 @@ export const accountModel: CollectionSchema = {
     {
       name: 'plan',
       optional: true,
+      notes: 'Plan',
       children: [
         { name: 'type', type: 'string' },
-        { name: 'maxUsers', type: 'number', optional: true },
+        { name: 'maxUsers', type: 'number', optional: true, notes: 'maxUsers' },
         { name: 'maxCandidates', type: 'number', optional: true },
         { name: 'maxOpenings', type: 'number' },
       ],
@@ -103,6 +104,7 @@ export const accountModel: CollectionSchema = {
       children: [
         {
           name: 'privateName',
+          optional: true,
           children: [
             { name: 'dateUpdate', type: 'Date' },
             { name: 'previousValue', type: 'string' },
@@ -110,6 +112,7 @@ export const accountModel: CollectionSchema = {
             { name: 'updatedByUser', type: 'User' },
             {
               name: 'uupdatedByUserupdatedByUserupdatedByUserupdatedByUserpdatedByUser',
+              optional: true,
               type: 'User',
             },
           ],

@@ -256,7 +256,7 @@ export function createNestedTable<E extends SVGElement, D>(
             'transform',
             (d) =>
               `translate(${currentColumnOffset}, ${
-                startingPoint.data.index * NODE_SIZE + NODE_SIZE / 2
+                startingPoint.data.index * NODE_SIZE 
               })`
           );
 
@@ -268,7 +268,7 @@ export function createNestedTable<E extends SVGElement, D>(
             'transform',
             (d) =>
               `translate(${currentColumnOffset}, ${
-                d.data.index * NODE_SIZE + NODE_SIZE / 2
+                d.data.index * NODE_SIZE 
               })`
           );
 
@@ -283,7 +283,7 @@ export function createNestedTable<E extends SVGElement, D>(
             'transform',
             (d) =>
               `translate(${currentColumnOffset}, ${
-                startingPoint.data.index * NODE_SIZE + NODE_SIZE / 2
+                startingPoint.data.index * NODE_SIZE 
               })`
           );
       }

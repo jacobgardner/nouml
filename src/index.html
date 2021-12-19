@@ -11,12 +11,45 @@
       -ms-user-select: none;
       user-select: none;
     }
+
+    .tooltip {
+      display: block;
+      position: absolute;
+      min-width: 300px;
+      max-width: 300px;
+      min-height: 50px;
+      border: 1px solid black;
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 1px 1px 5px rgba(0, 0,0, 0.2);
+      padding: 5px;
+    }
+
+    .tooltip-hidden {
+      display: none;
+
+    }
+
+    .copy-to-clipboard {
+      opacity: 0.2;
+
+      transition: opacity 0.5s;
+    }
+
+    .copy-to-clipboard:hover {
+      opacity: 1;
+    }
   </style>
 </head>
 
 <body>
 
-  <div id="d3"></div>
+
+  <div id="graph-root"></div>
+  <div class="tooltip tooltip-hidden" id="tooltip">
+    This is a note that sfdoisdfs sodifjsoadf sdfoisjadfosadifjsoadfasf
+    sdfoiasdjfosadf sadfasodfis adfosadfjsado fiasdfjosadf aosdifjaosdf
+  </div>
 
 </body>
 

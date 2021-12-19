@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@parcel/transformer-inline-string": "^2.0.1",
     "@types/d3": "7.1.0",
     "@types/parcel-env": "0.0.1",
     "@types/uniqid": "^5.3.1",
