@@ -300,4 +300,6 @@ export function createNestedTable<E extends SVGElement, D>(
   }
 
   update(root);
+
+  return containerGroup;
 }

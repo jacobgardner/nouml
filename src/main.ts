@@ -30,7 +30,7 @@ svg
   .attr('font-size', 10)
   .style('overflow', 'visible');
 
-createNestedTable(svg, {
+const documentTableDetails = {
   columns: [
     {
       name: 'Notes',
@@ -48,12 +48,12 @@ createNestedTable(svg, {
           .on('mouseover', (evt, d) => {
             tooltip.classed('tooltip-hidden', false);
             tooltip.node().innerHTML = d.data.notes;
-            tooltip.style('left', `${evt.clientX + 15}px`);
-            tooltip.style('top', `${evt.clientY}px`);
+            tooltip.style('left', `${evt.pageX + 15}px`);
+            tooltip.style('top', `${evt.pageY}px`);
           })
           .on('mousemove', (evt: MouseEvent, d) => {
-            tooltip.style('left', `${evt.clientX + 15}px`);
-            tooltip.style('top', `${evt.clientY}px`);
+            tooltip.style('left', `${evt.pageX + 15}px`);
+            tooltip.style('top', `${evt.pageY}px`);
           })
           .on('mouseleave', (d) => {
             tooltip.classed('tooltip-hidden', true);
@@ -102,5 +102,84 @@ createNestedTable(svg, {
       },
     },
   ],
+};
+
+const container = createNestedTable(svg, {
+  ...documentTableDetails,
   root: d3.hierarchy(accountModel),
 });
+
+const ref = createNestedTable(svg, {
+  ...documentTableDetails,
+  root: d3.hierarchy({
+    name: 'Fields',
+    children: [
+      { name: '_id', type: 'ObjectId' },
+      { name: 'accountName', type: 'string' },
+    ],
+  }),
+});
+
+container.attr('transform', `translate(500, 100)`);
+
+const d = d3.linkHorizontal();
+
+const v = d({
+  target: [350, NODE_SIZE * 2 + NODE_SIZE / 2],
+  source: [500, 100 + NODE_SIZE * 3 + NODE_SIZE / 2],
+});
+
+
+
+       svg 
+          .append('image')
+          .attr('xlink:href', noteIcon)
+          .attr('x', (350 +500) / 2)
+          .attr('y',  ((NODE_SIZE * 2 + NODE_SIZE / 2) + (100 + NODE_SIZE * 3 + NODE_SIZE / 2)) / 2 - ICON_SIZE) 
+          .attr('height', ICON_SIZE)
+          .attr('cursor', 'pointer')
+          .on('mouseover', (evt, d) => {
+            tooltip.classed('tooltip-hidden', false);
+            tooltip.node().innerHTML = 'This is a link note';
+            tooltip.style('left', `${evt.pageX + 15}px`);
+            tooltip.style('top', `${evt.pageY}px`);
+          })
+          .on('mousemove', (evt: MouseEvent, d) => {
+            tooltip.style('left', `${evt.pageX + 15}px`);
+            tooltip.style('top', `${evt.pageY}px`);
+          })
+          .on('mouseleave', (d) => {
+            tooltip.classed('tooltip-hidden', true);
+          });
+
+console.log(v);
+svg
+  .append('path')
+  .attr('d', v)
+  .attr('fill', 'none')
+  .attr('stroke', '#ccc')
+  .attr('marker-end', 'url(#link-arrow)');
+
+const defs = svg.append('defs');
+defs
+  .append('marker')
+  .attr('id', 'link-arrow')
+  .attr('markerWidth', 10)
+  .attr('markerHeight', 10)
+  .attr('orient', 'auto')
+  .attr('refY', 3)
+  .attr('refX', 9)
+  .append('path')
+  .attr('d', 'M0,6 L9,3 L0,0')
+  .attr('fill', 'none')
+  .attr('stroke', '#ccc');
+
+
+
+  const box = svg.node()?.getBBox();
+
+  if (box) {
+    console.log(box);
+    svg.attr('height', box.height)
+    svg.attr('width', box.width)
+  }
