@@ -1,10 +1,10 @@
-import { select } from 'd3-selection';
+import { BaseType, select } from 'd3-selection';
 import { hierarchy } from 'd3-hierarchy';
 import { linkHorizontal } from 'd3-shape';
 
 import { accountModel, CollectionSchema, isSubdoc } from './accountData';
 import { NODE_SIZE, ICON_SIZE } from './config';
-import { createNestedTable } from './nestedTable';
+import { createNestedTable, TableData } from './nestedTable';
 import { wrap } from './utils';
 import noteIcon from './icons/note.svg';
 import copy from './icons/copy-to-clipboard.svg';
@@ -32,7 +32,7 @@ svg
   .attr('font-size', 10)
   .style('overflow', 'visible');
 
-const documentTableDetails = {
+const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
   columns: [
     {
       name: 'Notes',
@@ -45,11 +45,14 @@ const documentTableDetails = {
           .attr('x', (width - ICON_SIZE) / 2)
           .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
           .attr('height', ICON_SIZE)
-          .attr('visibility', (d) => (d.data.notes ? 'visible' : 'hidden'))
+          .attr('visibility', (d: any) => (d.data.notes ? 'visible' : 'hidden'))
           .attr('cursor', 'pointer')
-          .on('mouseover', (evt, d) => {
+          .on('mouseover', (evt, d: any) => {
             tooltip.classed('tooltip-hidden', false);
-            tooltip.node().innerHTML = d.data.notes;
+            const node = tooltip.node();
+            if (node && d.data.notes) {
+              node.innerHTML = d.data.notes;
+            }
             tooltip.style('left', `${evt.pageX + 15}px`);
             tooltip.style('top', `${evt.pageY}px`);
           })
@@ -71,7 +74,7 @@ const documentTableDetails = {
           .append('text')
           .attr('x', width / 2)
           .attr('y', NODE_SIZE / 2)
-          .text((d) => (d.data.optional ? '' : '*'))
+          .text((d: any) => (d.data.optional ? '' : '*'))
           .attr('text-anchor', 'middle')
           .attr('dominant-baseline', 'middle');
       },
@@ -85,11 +88,11 @@ const documentTableDetails = {
           .append('text')
           .attr('x', NODE_SIZE / 2)
           .attr('y', NODE_SIZE / 2)
-          .text((d) => (isSubdoc(d) ? '- ' : d.data.type))
+          .text((d: any) => (isSubdoc(d) ? '- ' : d.data.type))
           .attr('dominant-baseline', 'middle')
           .each(wrap(width - NODE_SIZE / 2 - ICON_SIZE))
           .append('title')
-          .text((d) => (isSubdoc(d) ? '- ' : d.data.type));
+          .text((d: any) => (isSubdoc(d) ? '- ' : d.data.type));
         root
           .append('image')
           .attr('class', 'copy-to-clipboard')
@@ -98,7 +101,7 @@ const documentTableDetails = {
           .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
           .attr('x', width - NODE_SIZE)
           .attr('cursor', 'pointer')
-          .on('click', (evt, d) => {
+          .on('click', (evt, d: any) => {
             navigator.clipboard.writeText(isSubdoc(d) ? '- ' : d.data.type);
           });
       },
@@ -106,12 +109,12 @@ const documentTableDetails = {
   ],
 };
 
-const container = createNestedTable(svg, {
+const container = createNestedTable(svg as any, {
   ...documentTableDetails,
   root: hierarchy(accountModel),
 });
 
-const ref = createNestedTable(svg, {
+const ref = createNestedTable(svg as any, {
   ...documentTableDetails,
   root: hierarchy({
     name: 'Fields',
@@ -145,7 +148,10 @@ svg
   .attr('cursor', 'pointer')
   .on('mouseover', (evt, d) => {
     tooltip.classed('tooltip-hidden', false);
-    tooltip.node().innerHTML = 'This is a link note';
+    const node = tooltip.node();
+    if (node) {
+      node.innerHTML = 'This is a link note';
+    }
     tooltip.style('left', `${evt.pageX + 15}px`);
     tooltip.style('top', `${evt.pageY}px`);
   })

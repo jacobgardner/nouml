@@ -16,8 +16,8 @@ export interface ColumnDetails<D> {
   displayName?: string;
   width: number;
   primary?: boolean;
-  content?: <E extends SVGElement>(
-    root: d3.Selection<E, unknown, null, undefined>,
+  content?: <E extends BaseType, D0, P extends BaseType, D1>(
+    root: d3.Selection<E, D0, P, D1>,
     width: number
   ) => void;
 }
@@ -27,13 +27,15 @@ export interface TableData<D> {
   root: d3.HierarchyNode<D>;
 }
 
+type S<D, E extends BaseType = BaseType> = d3.Selection<
+  E,
+  D & { index: number; id: string },
+  null,
+  undefined
+>;
+
 export function createNestedTable<D extends { name: string }>(
-  svgRoot: d3.Selection<
-    BaseType,
-    D & { index: number; id: string },
-    null,
-    undefined
-  >,
+  svgRoot: d3.Selection<BaseType, unknown, null, undefined>,
   tableData: TableData<D>
 ) {
   const tableWidth = tableData.columns.reduce((acc, d) => acc + d.width, 0);
@@ -94,10 +96,20 @@ export function createNestedTable<D extends { name: string }>(
   let primaryWidth = 0;
   let primaryOffset = 0;
   const columnGroups: Array<
-    d3.Selection<SVGGElement, D &  {index: number; id: string}, null, undefined>
+    d3.Selection<
+      SVGGElement,
+      unknown,
+      null,
+      undefined
+    >
   > = [];
   let primaryGroup:
-    | d3.Selection<SVGGElement, D & {index: number; id: string}, null, undefined>
+    | d3.Selection<
+        SVGGElement,
+        unknown,
+        null,
+        undefined
+      >
     | undefined;
   for (const column of tableData.columns) {
     headerGroup
@@ -149,7 +161,12 @@ export function createNestedTable<D extends { name: string }>(
     containerOutline.transition(transition).attr('height', tableHeight);
     clipPath.transition(transition).attr('height', tableHeight);
 
-    const hLines = hGridGroup.selectAll('path').data(nodes, (d) => d.data.id);
+    const hLines = hGridGroup
+      .selectAll<
+        SVGPathElement,
+        d3.HierarchyNode<D & { index: number; id: string }>
+      >('path')
+      .data(nodes, (d) => d.data.id);
 
     const hLineEnter = hLines.enter().append('path').attr('stroke-opacity', 0);
 
@@ -162,9 +179,12 @@ export function createNestedTable<D extends { name: string }>(
     hLines.exit().transition(transition).remove().attr('stroke-opacity', 0);
 
     const primaryNode = primaryGroup
-      .selectChildren('g')
+      .selectChildren<
+        SVGGElement,
+        d3.HierarchyNode<D & { index: number; id: string }>
+      >('g')
       .data(nodes.slice(1), (d) => {
-        return d.id;
+        return d.data.id;
       });
 
     const xOffset = (d: HierarchyNode<unknown>) => (d.depth - 1) * NODE_SIZE;
@@ -181,7 +201,7 @@ export function createNestedTable<D extends { name: string }>(
       )
       .on('click', (event, d) => {
         if (d.children || d._children) {
-          d.children = d.children ? null : d._children;
+          d.children = d.children ? undefined : d._children;
           update(d);
         }
       });
@@ -239,7 +259,10 @@ export function createNestedTable<D extends { name: string }>(
 
     primaryNode
       .merge(primaryEnter)
-      .selectAll('.caret')
+      .selectAll<
+        SVGTextElement,
+        d3.HierarchyNode<D & { index: number; id: string }>
+      >('.caret')
       .transition(transition)
       .attr(
         'transform',
@@ -271,8 +294,11 @@ export function createNestedTable<D extends { name: string }>(
 
       if (column.content) {
         const currentColumn = columnGroup
-          .selectChildren('g')
-          .data(nodes.slice(1), (d) => d.id);
+          .selectChildren<
+            SVGGElement,
+            d3.HierarchyNode<D & { index: number; id: string }>
+          >('g')
+          .data(nodes.slice(1), (d) => d.data.id);
 
         const currentColumnEnter = currentColumn
           .enter()
