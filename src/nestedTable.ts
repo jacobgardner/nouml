@@ -1,7 +1,15 @@
+import { BaseType } from 'd3-selection';
 import { ICON_SIZE, NODE_SIZE } from './config';
 import uniqid from 'uniqid';
 import { wrap } from './utils';
 import copy from './icons/copy-to-clipboard.svg';
+import { HierarchyNode } from 'd3-hierarchy';
+
+declare module 'd3-hierarchy' {
+  interface HierarchyNode<Datum> {
+    _children?: this[] | undefined;
+  }
+}
 
 export interface ColumnDetails<D> {
   name: string;
@@ -19,14 +27,21 @@ export interface TableData<D> {
   root: d3.HierarchyNode<D>;
 }
 
-export function createNestedTable<E extends SVGElement, D>(
-  svgRoot: d3.Selection<E, unknown, null, undefined>,
+export function createNestedTable<D extends { name: string }>(
+  svgRoot: d3.Selection<
+    BaseType,
+    D & { index: number; id: string },
+    null,
+    undefined
+  >,
   tableData: TableData<D>
 ) {
   const tableWidth = tableData.columns.reduce((acc, d) => acc + d.width, 0);
-  const root = tableData.root.copy().eachBefore((d, i) => {
+  const root = (
+    tableData.root.copy() as HierarchyNode<D & { index: number; id: string }>
+  ).eachBefore((d, i) => {
     d.data.index = i;
-    d.id = d
+    d.data.id = d
       .ancestors()
       .reverse()
       .map((d) => d.data.name)
@@ -79,10 +94,10 @@ export function createNestedTable<E extends SVGElement, D>(
   let primaryWidth = 0;
   let primaryOffset = 0;
   const columnGroups: Array<
-    d3.Selection<SVGGElement, unknown, null, undefined>
+    d3.Selection<SVGGElement, D &  {index: number; id: string}, null, undefined>
   > = [];
   let primaryGroup:
-    | d3.Selection<SVGGElement, unknown, null, undefined>
+    | d3.Selection<SVGGElement, D & {index: number; id: string}, null, undefined>
     | undefined;
   for (const column of tableData.columns) {
     headerGroup
@@ -113,7 +128,9 @@ export function createNestedTable<E extends SVGElement, D>(
     throw new Error('Must have a primary group');
   }
 
-  function update(startingPoint: d3.HierarchyNode<{ index?: number }>) {
+  function update(
+    startingPoint: d3.HierarchyNode<{ index: number; id: string }>
+  ) {
     if (!primaryGroup) {
       throw new Error('Must have a primary group');
     }
@@ -126,13 +143,13 @@ export function createNestedTable<E extends SVGElement, D>(
 
     const nodes = root
       .descendants()
-      .sort((a, b) => a.data.index > b.data.index);
+      .sort((a, b) => (a.data.index > b.data.index ? 1 : -1));
 
     tableHeight = nodes.length * NODE_SIZE;
     containerOutline.transition(transition).attr('height', tableHeight);
     clipPath.transition(transition).attr('height', tableHeight);
 
-    const hLines = hGridGroup.selectAll('path').data(nodes, (d) => d.id);
+    const hLines = hGridGroup.selectAll('path').data(nodes, (d) => d.data.id);
 
     const hLineEnter = hLines.enter().append('path').attr('stroke-opacity', 0);
 
@@ -150,9 +167,7 @@ export function createNestedTable<E extends SVGElement, D>(
         return d.id;
       });
 
-    // primaryGroup.selectChildren('')
-
-    const xOffset = (d) => (d.depth - 1) * NODE_SIZE;
+    const xOffset = (d: HierarchyNode<unknown>) => (d.depth - 1) * NODE_SIZE;
 
     const primaryEnter = primaryNode
       .enter()
