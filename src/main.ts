@@ -6,13 +6,13 @@ import {
   accountModel,
   CollectionSchema,
   isStandaloneItem,
-  isSubdoc,
 } from './accountData';
 import { NODE_SIZE, ICON_SIZE } from './config';
 import { createNestedTable, TableData } from './nestedTable';
 import { wrap } from './utils';
 import noteIcon from './icons/note.svg';
 import copy from './icons/copy-to-clipboard.svg';
+import { addCopyToClipboard } from './copyToClipboard';
 
 if (module.hot) {
   module.hot.dispose(function () {
@@ -117,7 +117,7 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
           .append('title')
           .text((d) => d.data.name);
 
-        const caret = textAndCaret
+        textAndCaret
           .append('text')
           .attr('class', 'caret')
           .attr('font-family', 'FontAwesome')
@@ -129,7 +129,7 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
           )
           .attr('transform', `rotate(0, ${NODE_SIZE / 2}, 0)`);
 
-        const t = merged
+        merged
           .selectAll<SVGElement, HierarchyNode<CollectionSchema>>('.caret')
           .transition(transition)
           .attr(
@@ -137,17 +137,7 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
             (d) => `rotate(${d.children ? 90 : 0}, ${NODE_SIZE / 2}, 0)`
           );
 
-        root
-          .append('image')
-          .attr('class', 'copy-to-clipboard')
-          .attr('xlink:href', copy)
-          .attr('height', ICON_SIZE)
-          .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
-          .attr('x', width - NODE_SIZE)
-          .attr('cursor', 'pointer')
-          .on('click', (evt, d) => {
-            navigator.clipboard.writeText(d.data.name);
-          });
+        addCopyToClipboard(root, width, (d) => d.data.name);
       },
     },
     {
@@ -163,19 +153,10 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
           .each(wrap(width - NODE_SIZE / 2 - ICON_SIZE))
           .append('title')
           .text((d) => (isStandaloneItem(d) ? d.data.type : '- '));
-        root
-          .append('image')
-          .attr('class', 'copy-to-clipboard')
-          .attr('xlink:href', copy)
-          .attr('height', ICON_SIZE)
-          .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
-          .attr('x', width - NODE_SIZE)
-          .attr('cursor', 'pointer')
-          .on('click', (evt, d) => {
-            navigator.clipboard.writeText(
-              isStandaloneItem(d) ? d.data.type : '- '
-            );
-          });
+
+        addCopyToClipboard(root, width, (d) =>
+          isStandaloneItem(d) ? d.data.type : '- '
+        );
       },
     },
   ],
