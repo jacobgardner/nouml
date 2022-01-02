@@ -15,10 +15,14 @@ export interface ColumnDetails<D> {
   name: string;
   displayName?: string;
   width: number;
-  primary?: boolean;
   content?: <E extends BaseType, D0, P extends BaseType, D1>(
     root: d3.Selection<E, D0, P, D1>,
-    width: number
+    width: number,
+    update: (
+      startingPoint: d3.HierarchyNode<{ index: number; id: string }>
+    ) => void,
+    mergedNodes: d3.Selection<any, any, any, any>,
+    transition: d3.Transition<any, any, any, any>
   ) => void;
 }
 
@@ -93,24 +97,10 @@ export function createNestedTable<D extends { name: string }>(
   containerGroup.attr('clip-path', `url(#${clipId})`);
 
   let currentXOffset = 0;
-  let primaryWidth = 0;
-  let primaryOffset = 0;
   const columnGroups: Array<
-    d3.Selection<
-      SVGGElement,
-      unknown,
-      null,
-      undefined
-    >
+    d3.Selection<SVGGElement, unknown, null, undefined>
   > = [];
-  let primaryGroup:
-    | d3.Selection<
-        SVGGElement,
-        unknown,
-        null,
-        undefined
-      >
-    | undefined;
+
   for (const column of tableData.columns) {
     headerGroup
       .append('text')
@@ -127,26 +117,13 @@ export function createNestedTable<D extends { name: string }>(
     const g = containerGroup.append('g');
     columnGroups.push(g);
 
-    if (column.primary) {
-      primaryGroup = g;
-      primaryOffset = currentXOffset;
-      primaryWidth = column.width;
-    }
-
     currentXOffset += column.width;
   }
 
-  if (!primaryGroup) {
-    throw new Error('Must have a primary group');
-  }
 
   function update(
     startingPoint: d3.HierarchyNode<{ index: number; id: string }>
   ) {
-    if (!primaryGroup) {
-      throw new Error('Must have a primary group');
-    }
-
     root.eachBefore((d, i) => {
       d.data.index = i;
     });
@@ -178,108 +155,6 @@ export function createNestedTable<D extends { name: string }>(
 
     hLines.exit().transition(transition).remove().attr('stroke-opacity', 0);
 
-    const primaryNode = primaryGroup
-      .selectChildren<
-        SVGGElement,
-        d3.HierarchyNode<D & { index: number; id: string }>
-      >('g')
-      .data(nodes.slice(1), (d) => {
-        return d.data.id;
-      });
-
-    const xOffset = (d: HierarchyNode<unknown>) => (d.depth - 1) * NODE_SIZE;
-
-    const primaryEnter = primaryNode
-      .enter()
-      .append('g')
-      .attr('data-id', 'primaryNode')
-      .attr('fill-opacity', 0)
-      .attr(
-        'transform',
-        (d) =>
-          `translate(${primaryOffset}, ${startingPoint.data.index * NODE_SIZE})`
-      )
-      .on('click', (event, d) => {
-        if (d.children || d._children) {
-          d.children = d.children ? undefined : d._children;
-          update(d);
-        }
-      });
-
-    primaryEnter
-      .append('image')
-      .attr('class', 'copy-to-clipboard')
-      .attr('xlink:href', copy)
-      .attr('height', ICON_SIZE)
-      .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
-      .attr('x', primaryWidth - NODE_SIZE)
-      .attr('cursor', 'pointer')
-      .on('click', (evt, d) => {
-        navigator.clipboard.writeText(d.data.name);
-      });
-
-    primaryNode
-      .merge(primaryEnter)
-      .transition(transition)
-      .attr('fill-opacity', 1)
-      .attr(
-        'transform',
-        (d) => `translate(${primaryOffset}, ${d.data.index * NODE_SIZE})`
-      );
-
-    const textAndCaret = primaryEnter
-      .append('g')
-      .attr('dominant-baseline', 'middle')
-      .attr('transform', (d) => `translate(${xOffset(d)}, ${NODE_SIZE / 2})`)
-      .attr('cursor', (d) =>
-        d.children || d._children ? 'pointer' : 'default'
-      );
-
-    textAndCaret
-      .append('text')
-      .text((d) => d.data.name)
-      .attr('x', NODE_SIZE)
-      .each(function (d) {
-        wrap(primaryWidth - (d.depth - 1) * NODE_SIZE - NODE_SIZE).call(this);
-      })
-      .append('title')
-      .text((d) => d.data.name);
-
-    const caret = textAndCaret
-      .append('text')
-      .attr('class', 'caret')
-      .attr('font-family', 'FontAwesome')
-      .text('')
-      .attr('text-anchor', 'middle')
-      .attr('x', NODE_SIZE / 2)
-      .attr('visibility', (d) =>
-        d.children || d._children ? 'visible' : 'hidden'
-      )
-      .attr('transform', `rotate(0, ${NODE_SIZE / 2}, 0)`);
-
-    primaryNode
-      .merge(primaryEnter)
-      .selectAll<
-        SVGTextElement,
-        d3.HierarchyNode<D & { index: number; id: string }>
-      >('.caret')
-      .transition(transition)
-      .attr(
-        'transform',
-        (d) => `rotate(${d.children ? 90 : 0}, ${NODE_SIZE / 2}, 0)`
-      );
-
-    primaryNode
-      .exit()
-      .transition(transition)
-      .remove()
-      .attr('fill-opacity', 0)
-      .attr(
-        'transform',
-        (d) =>
-          `translate(${primaryOffset}, ${startingPoint.data.index * NODE_SIZE})`
-      );
-
     let columnIndex = 0;
     let columnOffset = 0;
     for (const column of tableData.columns) {
@@ -288,9 +163,6 @@ export function createNestedTable<D extends { name: string }>(
       columnOffset += column.width;
 
       columnIndex += 1;
-      if (column.primary) {
-        continue;
-      }
 
       if (column.content) {
         const currentColumn = columnGroup
@@ -312,8 +184,9 @@ export function createNestedTable<D extends { name: string }>(
               })`
           );
 
-        currentColumn
-          .merge(currentColumnEnter)
+        const mergedColumn = currentColumn.merge(currentColumnEnter);
+
+        mergedColumn
           .transition(transition)
           .attr('opacity', 1)
           .attr(
@@ -322,7 +195,7 @@ export function createNestedTable<D extends { name: string }>(
               `translate(${currentColumnOffset}, ${d.data.index * NODE_SIZE})`
           );
 
-        column.content(currentColumnEnter, column.width);
+        column.content(currentColumnEnter, column.width, update, mergedColumn, transition);
 
         currentColumn
           .exit()

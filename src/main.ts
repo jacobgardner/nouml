@@ -1,5 +1,5 @@
 import { BaseType, select } from 'd3-selection';
-import { hierarchy } from 'd3-hierarchy';
+import { hierarchy, HierarchyNode } from 'd3-hierarchy';
 import { linkHorizontal } from 'd3-shape';
 
 import { accountModel, CollectionSchema, isSubdoc } from './accountData';
@@ -31,6 +31,8 @@ svg
   .attr('font-family', 'sans-serif')
   .attr('font-size', 10)
   .style('overflow', 'visible');
+
+const xOffset = (d: HierarchyNode<unknown>) => (d.depth - 1) * NODE_SIZE;
 
 const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
   columns: [
@@ -79,7 +81,70 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
           .attr('dominant-baseline', 'middle');
       },
     },
-    { name: 'Fields', width: 200, primary: true },
+    {
+      name: 'Fields',
+      width: 200,
+      content(root, width, update, merged, transition) {
+        const textAndCaret = root
+          .append('g')
+          .on('click', (event, d: any) => {
+            if (d.children || d._children) {
+              d.children = d.children ? undefined : d._children;
+              update(d);
+            }
+          })
+          .attr('cursor', (d: any) =>
+            d.children || d._children ? 'pointer' : 'default'
+          )
+          .attr('dominant-baseline', 'middle')
+          .attr(
+            'transform',
+            (d: any) => `translate(${xOffset(d)}, ${NODE_SIZE / 2})`
+          );
+
+        textAndCaret
+          .append('text')
+          .text((d: any) => d.data.name)
+          .attr('x', NODE_SIZE)
+          .each(function (d: any) {
+            wrap(width - (d.depth - 1) * NODE_SIZE - NODE_SIZE).call(this);
+          })
+          .append('title')
+          .text((d: any) => d.data.name);
+
+        const caret = textAndCaret
+          .append('text')
+          .attr('class', 'caret')
+          .attr('font-family', 'FontAwesome')
+          .text('')
+          .attr('text-anchor', 'middle')
+          .attr('x', NODE_SIZE / 2)
+          .attr('visibility', (d: any) =>
+            d.children || d._children ? 'visible' : 'hidden'
+          )
+          .attr('transform', `rotate(0, ${NODE_SIZE / 2}, 0)`);
+
+        merged
+          .selectAll('.caret')
+          .transition(transition)
+          .attr(
+            'transform',
+            (d: any) => `rotate(${d.children ? 90 : 0}, ${NODE_SIZE / 2}, 0)`
+          );
+
+        root
+          .append('image')
+          .attr('class', 'copy-to-clipboard')
+          .attr('xlink:href', copy)
+          .attr('height', ICON_SIZE)
+          .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
+          .attr('x', width - NODE_SIZE)
+          .attr('cursor', 'pointer')
+          .on('click', (evt, d: any) => {
+            navigator.clipboard.writeText(d.data.name);
+          });
+      },
+    },
     {
       name: 'Type',
       width: 110,
