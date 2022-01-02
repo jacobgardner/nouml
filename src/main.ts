@@ -1,8 +1,13 @@
-import { BaseType, select } from 'd3-selection';
+import { select } from 'd3-selection';
 import { hierarchy, HierarchyNode } from 'd3-hierarchy';
 import { linkHorizontal } from 'd3-shape';
 
-import { accountModel, CollectionSchema, isSubdoc } from './accountData';
+import {
+  accountModel,
+  CollectionSchema,
+  isStandaloneItem,
+  isSubdoc,
+} from './accountData';
 import { NODE_SIZE, ICON_SIZE } from './config';
 import { createNestedTable, TableData } from './nestedTable';
 import { wrap } from './utils';
@@ -10,7 +15,7 @@ import noteIcon from './icons/note.svg';
 import copy from './icons/copy-to-clipboard.svg';
 
 if (module.hot) {
-  module.hot.dispose(function (data) {
+  module.hot.dispose(function () {
     // module is about to be replaced.
     // You can save data that should be accessible to the new asset in `data`
     window.document.body.innerHTML = '';
@@ -47,9 +52,9 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
           .attr('x', (width - ICON_SIZE) / 2)
           .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
           .attr('height', ICON_SIZE)
-          .attr('visibility', (d: any) => (d.data.notes ? 'visible' : 'hidden'))
+          .attr('visibility', (d) => (d.data.notes ? 'visible' : 'hidden'))
           .attr('cursor', 'pointer')
-          .on('mouseover', (evt, d: any) => {
+          .on('mouseover', (evt, d) => {
             tooltip.classed('tooltip-hidden', false);
             const node = tooltip.node();
             if (node && d.data.notes) {
@@ -76,7 +81,7 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
           .append('text')
           .attr('x', width / 2)
           .attr('y', NODE_SIZE / 2)
-          .text((d: any) => (d.data.optional ? '' : '*'))
+          .text((d) => (d.data.optional ? '' : '*'))
           .attr('text-anchor', 'middle')
           .attr('dominant-baseline', 'middle');
       },
@@ -87,30 +92,30 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
       content(root, width, update, merged, transition) {
         const textAndCaret = root
           .append('g')
-          .on('click', (event, d: any) => {
+          .on('click', (event, d) => {
             if (d.children || d._children) {
               d.children = d.children ? undefined : d._children;
               update(d);
             }
           })
-          .attr('cursor', (d: any) =>
+          .attr('cursor', (d) =>
             d.children || d._children ? 'pointer' : 'default'
           )
           .attr('dominant-baseline', 'middle')
           .attr(
             'transform',
-            (d: any) => `translate(${xOffset(d)}, ${NODE_SIZE / 2})`
+            (d) => `translate(${xOffset(d)}, ${NODE_SIZE / 2})`
           );
 
         textAndCaret
           .append('text')
-          .text((d: any) => d.data.name)
+          .text((d) => d.data.name)
           .attr('x', NODE_SIZE)
-          .each(function (d: any) {
+          .each(function (d) {
             wrap(width - (d.depth - 1) * NODE_SIZE - NODE_SIZE).call(this);
           })
           .append('title')
-          .text((d: any) => d.data.name);
+          .text((d) => d.data.name);
 
         const caret = textAndCaret
           .append('text')
@@ -119,17 +124,17 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
           .text('')
           .attr('text-anchor', 'middle')
           .attr('x', NODE_SIZE / 2)
-          .attr('visibility', (d: any) =>
+          .attr('visibility', (d) =>
             d.children || d._children ? 'visible' : 'hidden'
           )
           .attr('transform', `rotate(0, ${NODE_SIZE / 2}, 0)`);
 
-        merged
-          .selectAll('.caret')
+        const t = merged
+          .selectAll<SVGElement, HierarchyNode<CollectionSchema>>('.caret')
           .transition(transition)
           .attr(
             'transform',
-            (d: any) => `rotate(${d.children ? 90 : 0}, ${NODE_SIZE / 2}, 0)`
+            (d) => `rotate(${d.children ? 90 : 0}, ${NODE_SIZE / 2}, 0)`
           );
 
         root
@@ -140,7 +145,7 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
           .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
           .attr('x', width - NODE_SIZE)
           .attr('cursor', 'pointer')
-          .on('click', (evt, d: any) => {
+          .on('click', (evt, d) => {
             navigator.clipboard.writeText(d.data.name);
           });
       },
@@ -153,11 +158,11 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
           .append('text')
           .attr('x', NODE_SIZE / 2)
           .attr('y', NODE_SIZE / 2)
-          .text((d: any) => (isSubdoc(d) ? '- ' : d.data.type))
+          .text((d) => (isStandaloneItem(d) ? d.data.type : '- '))
           .attr('dominant-baseline', 'middle')
           .each(wrap(width - NODE_SIZE / 2 - ICON_SIZE))
           .append('title')
-          .text((d: any) => (isSubdoc(d) ? '- ' : d.data.type));
+          .text((d) => (isStandaloneItem(d) ? d.data.type : '- '));
         root
           .append('image')
           .attr('class', 'copy-to-clipboard')
@@ -166,8 +171,10 @@ const documentTableDetails: Omit<TableData<CollectionSchema>, 'root'> = {
           .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
           .attr('x', width - NODE_SIZE)
           .attr('cursor', 'pointer')
-          .on('click', (evt, d: any) => {
-            navigator.clipboard.writeText(isSubdoc(d) ? '- ' : d.data.type);
+          .on('click', (evt, d) => {
+            navigator.clipboard.writeText(
+              isStandaloneItem(d) ? d.data.type : '- '
+            );
           });
       },
     },

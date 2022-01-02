@@ -1,8 +1,6 @@
 import { BaseType } from 'd3-selection';
-import { ICON_SIZE, NODE_SIZE } from './config';
+import { NODE_SIZE } from './config';
 import uniqid from 'uniqid';
-import { wrap } from './utils';
-import copy from './icons/copy-to-clipboard.svg';
 import { HierarchyNode } from 'd3-hierarchy';
 
 declare module 'd3-hierarchy' {
@@ -15,13 +13,23 @@ export interface ColumnDetails<D> {
   name: string;
   displayName?: string;
   width: number;
-  content?: <E extends BaseType, D0, P extends BaseType, D1>(
-    root: d3.Selection<E, D0, P, D1>,
+  content?: <E extends BaseType, P extends BaseType>(
+    root: d3.Selection<
+      E,
+      HierarchyNode<D & { index: number; id: string }>,
+      P,
+      HierarchyNode<D & { index: number; id: string }>
+    >,
     width: number,
     update: (
       startingPoint: d3.HierarchyNode<{ index: number; id: string }>
     ) => void,
-    mergedNodes: d3.Selection<any, any, any, any>,
+    mergedNodes: d3.Selection<
+      any,
+      HierarchyNode<D & { index: number; id: string }>,
+      any,
+      HierarchyNode<D & { index: number; id: string }>
+    >,
     transition: d3.Transition<any, any, any, any>
   ) => void;
 }
@@ -120,7 +128,6 @@ export function createNestedTable<D extends { name: string }>(
     currentXOffset += column.width;
   }
 
-
   function update(
     startingPoint: d3.HierarchyNode<{ index: number; id: string }>
   ) {
@@ -195,7 +202,13 @@ export function createNestedTable<D extends { name: string }>(
               `translate(${currentColumnOffset}, ${d.data.index * NODE_SIZE})`
           );
 
-        column.content(currentColumnEnter, column.width, update, mergedColumn, transition);
+        column.content(
+          currentColumnEnter,
+          column.width,
+          update,
+          mergedColumn,
+          transition
+        );
 
         currentColumn
           .exit()
