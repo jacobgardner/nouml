@@ -4,7 +4,7 @@ import { CollectionSchema, isStandaloneItem } from '../accountData';
 import { ICON_SIZE, NODE_SIZE } from '../config';
 import { addCopyToClipboard } from '../copyToClipboard';
 import { createNestedTable, TableData } from '../nestedTable';
-import { tooltip } from '../tooltip';
+import { createNoteTooltip, tooltip } from '../tooltip';
 import { wrap } from '../utils';
 import noteIcon from '../icons/note.svg';
 
@@ -17,30 +17,10 @@ const collectionTableLayout: Omit<TableData<CollectionSchema>, 'root'> = {
       width: 20,
       displayName: '',
       content(root, width) {
-        root
-          .append('image')
-          .attr('xlink:href', noteIcon)
+        createNoteTooltip(root, (d) => d.data.notes ?? '')
           .attr('x', (width - ICON_SIZE) / 2)
           .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
-          .attr('height', ICON_SIZE)
-          .attr('visibility', (d) => (d.data.notes ? 'visible' : 'hidden'))
-          .attr('cursor', 'pointer')
-          .on('mouseover', (evt, d) => {
-            tooltip.classed('tooltip-hidden', false);
-            const node = tooltip.node();
-            if (node && d.data.notes) {
-              node.innerHTML = d.data.notes;
-            }
-            tooltip.style('left', `${evt.pageX + 15}px`);
-            tooltip.style('top', `${evt.pageY}px`);
-          })
-          .on('mousemove', (evt: MouseEvent, d) => {
-            tooltip.style('left', `${evt.pageX + 15}px`);
-            tooltip.style('top', `${evt.pageY}px`);
-          })
-          .on('mouseleave', (d) => {
-            tooltip.classed('tooltip-hidden', true);
-          });
+          .attr('visibility', (d) => (d.data.notes ? 'visible' : 'hidden'));
       },
     },
     {

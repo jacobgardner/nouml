@@ -5,7 +5,7 @@ import { accountModel } from './accountData';
 import { NODE_SIZE, ICON_SIZE } from './config';
 import noteIcon from './icons/note.svg';
 import { createCollectionTable } from './tables/collectionTable';
-import { tooltip } from './tooltip';
+import { createNoteTooltip, tooltip } from './tooltip';
 
 if (module.hot) {
   module.hot.dispose(function () {
@@ -19,10 +19,8 @@ if (module.hot) {
 
 const svg = select(document.body).append('svg');
 
-// const tooltip = d3.select('#tooltip');
-
 svg
-  // .attr('viewBox', [-nodeSize / 2, (-nodeSize * 3) / 2, 800, (nodes.length + 2) * nodeSize])
+  // .attr('viewBox', [-NODE_SIZE / 2, (-NODE_SIZE * 3) / 2, 800, (nodes.length + 2) * nodeSize])
   .attr('font-family', 'sans-serif')
   .attr('font-size', 10)
   .style('overflow', 'visible');
@@ -36,22 +34,6 @@ const ref = createCollectionTable(svg, {
   ],
 });
 
-// const container = createNestedTable(svg as any, {
-//   ...documentTableDetails,
-//   root: hierarchy(accountModel),
-// });
-
-// const ref = createNestedTable(svg as any, {
-//   ...documentTableDetails,
-//   root: hierarchy({
-//     name: 'Fields',
-//     children: [
-//       { name: '_id', type: 'ObjectId' },
-//       { name: 'accountName', type: 'string' },
-//     ],
-//   }),
-// });
-
 container.attr('transform', `translate(500, 100)`);
 
 const d = linkHorizontal();
@@ -61,37 +43,18 @@ const v = d({
   source: [500, 100 + NODE_SIZE * 3 + NODE_SIZE / 2],
 });
 
-svg
-  .append('image')
-  .attr('xlink:href', noteIcon)
+createNoteTooltip(svg, (d) => 'This is a link note...')
   .attr('x', (350 + 500) / 2)
   .attr(
     'y',
     (NODE_SIZE * 2 + NODE_SIZE / 2 + (100 + NODE_SIZE * 3 + NODE_SIZE / 2)) /
       2 -
       ICON_SIZE
-  )
-  .attr('height', ICON_SIZE)
-  .attr('cursor', 'pointer')
-  .on('mouseover', (evt, d) => {
-    tooltip.classed('tooltip-hidden', false);
-    const node = tooltip.node();
-    if (node) {
-      node.innerHTML = 'This is a link note';
-    }
-    tooltip.style('left', `${evt.pageX + 15}px`);
-    tooltip.style('top', `${evt.pageY}px`);
-  })
-  .on('mousemove', (evt: MouseEvent, d) => {
-    tooltip.style('left', `${evt.pageX + 15}px`);
-    tooltip.style('top', `${evt.pageY}px`);
-  })
-  .on('mouseleave', (d) => {
-    tooltip.classed('tooltip-hidden', true);
-  });
+  );
 
 svg
   .append('path')
+  .attr('class', 'link')
   .attr('d', v)
   .attr('fill', 'none')
   .attr('stroke', '#ccc')
