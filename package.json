@@ -4,6 +4,7 @@
   "description": "",
   "browserslist": "> 10%, last 2 versions, not dead",
   "source": "src/index.html",
+  "homepage": "https://jacobgardner.github.io/nouml/",
   "scripts": {
     "build": "webpack --mode=production",
     "watch": "webpack serve --mode=development ",

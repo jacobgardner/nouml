@@ -13,10 +13,7 @@ export function createNoteTooltip<B extends BaseType, D, P extends BaseType>(
   return root
     .append('image')
     .attr('xlink:href', noteIcon)
-    // .attr('x', (width - ICON_SIZE) / 2)
-    // .attr('y', (NODE_SIZE - ICON_SIZE) / 2)
     .attr('height', ICON_SIZE)
-    // .attr('visibility', (d) => (d.data.notes ? 'visible' : 'hidden'))
     .attr('cursor', 'pointer')
     .on('mouseover', (evt, d) => {
       tooltip.classed('tooltip-hidden', false);

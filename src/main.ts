@@ -3,9 +3,8 @@ import { linkHorizontal } from 'd3-shape';
 
 import { accountModel } from './accountData';
 import { NODE_SIZE, ICON_SIZE } from './config';
-import noteIcon from './icons/note.svg';
 import { createCollectionTable } from './tables/collectionTable';
-import { createNoteTooltip, tooltip } from './tooltip';
+import { createNoteTooltip } from './tooltip';
 
 if (module.hot) {
   module.hot.dispose(function () {
